@@ -1,19 +1,10 @@
-﻿module EBrown.Graphing.ArcGauge
+﻿module EBrown.Graphing.Gauge.Arc
 open System.Drawing
 open System.Drawing.Drawing2D
+open EBrown.Graphing
+open EBrown.Graphing.Gauge.Configuration
 
-type Configuration =
-    { Height : int
-      Width : int
-      Padding : Rectangle
-      GaugeWidth : int
-      Font : Font option
-      EmptyGaugeColor : Color option
-      FillGaugeColor : Color option
-      FontColor : Color option
-      OutlineColor : Color option
-      BackgroundColor : Color option
-      OutlineThickness : float32 option }
+let defaultConfig = Default
 
 let generate<'a> configuration (toFloat : 'a -> float32) (formatter : 'a -> string) (max : 'a) (min : 'a) (value : 'a) =
     use defaultFont = new Font("Arial", 12.f, FontStyle.Regular)
@@ -23,7 +14,6 @@ let generate<'a> configuration (toFloat : 'a -> float32) (formatter : 'a -> stri
     let imageHeight = configuration.Height - configuration.Padding.Left - configuration.Padding.Right
     let gaugeSweep = 180.0f
     let angle = gaugeSweep * (((value |> toFloat) - (min |> toFloat)) / ((max |> toFloat) - (min |> toFloat)))
-    let gaugeWidth = configuration.GaugeWidth
     let startAngle = 180.0f + (180.0f - gaugeSweep) / 2.0f
 
     let image = new Bitmap(imageWidth + configuration.Padding.Left + configuration.Padding.Right, imageHeight + configuration.Padding.Top + configuration.Padding.Bottom)
@@ -31,23 +21,23 @@ let generate<'a> configuration (toFloat : 'a -> float32) (formatter : 'a -> stri
     g.SmoothingMode <- SmoothingMode.AntiAlias
     g.InterpolationMode <- InterpolationMode.HighQualityBicubic
 
-    use backgroundBrush = new SolidBrush(configuration.BackgroundColor |> Option.defaultValue Color.White)
-    use emptyFillBrush = new SolidBrush(configuration.EmptyGaugeColor |> Option.defaultValue (Color.FromArgb(255, 192, 192, 192)))
-    use gaugeFillBrush = new SolidBrush(configuration.FillGaugeColor |> Option.defaultValue (Color.FromArgb(255, 192, 64, 64)))
-    use externalPen = new Pen(configuration.OutlineColor |> Option.defaultValue (Color.FromArgb(255, 96, 96, 96)), configuration.OutlineThickness |> Option.defaultValue 1.5f)
-    use fontBrush = new SolidBrush(configuration.FontColor |> Option.defaultValue Color.Black)
+    use backgroundBrush = new SolidBrush(configuration.BackgroundColor)
+    use emptyFillBrush = new SolidBrush(configuration.EmptyGaugeColor)
+    use gaugeFillBrush = new SolidBrush(configuration.FillGaugeColor)
+    use externalPen = new Pen(configuration.OutlineColor, configuration.OutlineThickness)
+    use fontBrush = new SolidBrush(configuration.FontColor)
 
     g.FillRectangle(backgroundBrush, Rectangle(0, 0, imageWidth + configuration.Padding.Left + configuration.Padding.Right, imageHeight + configuration.Padding.Top + configuration.Padding.Bottom))
     use path = new GraphicsPath()
     path.AddArc(Rectangle(configuration.Padding.Left, configuration.Padding.Top, imageWidth, imageWidth), startAngle, angle)
     path.Reverse()
-    path.AddArc(Rectangle(configuration.Padding.Left + gaugeWidth, configuration.Padding.Top + gaugeWidth, imageWidth - gaugeWidth * 2, imageWidth - gaugeWidth * 2), startAngle, angle)
+    path.AddArc(Rectangle(configuration.Padding.Left + configuration.GaugeWidth, configuration.Padding.Top + configuration.GaugeWidth, imageWidth - configuration.GaugeWidth * 2, imageWidth - configuration.GaugeWidth * 2), startAngle, angle)
     path.CloseFigure()
 
     use externalPath = new GraphicsPath()
     externalPath.AddArc(Rectangle(configuration.Padding.Left, configuration.Padding.Top, imageWidth, imageWidth), startAngle, gaugeSweep)
     externalPath.Reverse()
-    externalPath.AddArc(Rectangle(configuration.Padding.Left + gaugeWidth, configuration.Padding.Top + gaugeWidth, imageWidth - gaugeWidth * 2, imageWidth - gaugeWidth * 2), startAngle, gaugeSweep)
+    externalPath.AddArc(Rectangle(configuration.Padding.Left + configuration.GaugeWidth, configuration.Padding.Top + configuration.GaugeWidth, imageWidth - configuration.GaugeWidth * 2, imageWidth - configuration.GaugeWidth * 2), startAngle, gaugeSweep)
     externalPath.CloseFigure()
     
     g.FillPath(emptyFillBrush, externalPath)
@@ -56,7 +46,7 @@ let generate<'a> configuration (toFloat : 'a -> float32) (formatter : 'a -> stri
 
     let drawLabel = General.drawLabelCentered g (Rectangle(0, 0, image.Width, image.Height)) font fontBrush
 
-    let gaugeLabelOffsetX = (configuration.Padding.Left |> float32) + (gaugeWidth / 2 |> float32)
+    let gaugeLabelOffsetX = (configuration.Padding.Left |> float32) + (configuration.GaugeWidth / 2 |> float32)
     let imageMidX = (imageWidth |> float32) * 0.5f + (configuration.Padding.Left |> float32)
     drawLabel (value |> formatter) (PointF(imageMidX, (imageWidth |> float32) * 0.5f + (configuration.Padding.Top |> float32) - 10.f))
     drawLabel (min |> formatter) (PointF(gaugeLabelOffsetX, (imageWidth |> float32) * 0.5f + 5.f + (configuration.Padding.Top |> float32)))
