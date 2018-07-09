@@ -1,4 +1,5 @@
-﻿#load "General.fs"
+﻿#load "Option.fs"
+#load "General.fs"
 #load @"Gauge\Configuration.fs"
 #load @"Gauge\Arc.fs"
 #load @"Gauge\Linear.fs"
