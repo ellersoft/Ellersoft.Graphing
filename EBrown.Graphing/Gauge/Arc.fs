@@ -3,6 +3,7 @@ open System.Drawing
 open System.Drawing.Drawing2D
 open EBrown.Graphing
 open EBrown.Graphing.Gauge.Configuration
+open System
 
 let defaultConfig = Default
 
@@ -53,3 +54,5 @@ let generate<'a> configuration (toFloat : 'a -> float32) (formatter : 'a -> stri
     drawLabel (max |> formatter) (PointF((image.Width |> float32) - gaugeLabelOffsetX, (imageWidth |> float32) * 0.5f + 5.f + (configuration.Padding.Top |> float32)))
     image
     
+let generateDelegate<'a> configuration (toFloat : Func<'a, float32>) (formatter : Func<'a, string>) (max : 'a) (min : 'a) (value : 'a) =
+    generate configuration toFloat.Invoke formatter.Invoke max min value
