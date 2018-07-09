@@ -18,7 +18,7 @@ let g1() =
     let savePath = Path.Combine(basePath, "TestGauge.png")
     let padding = Rectangle.FromLTRB(10, 10, 10, 30)
     let config = { Arc.defaultConfig with Padding = padding }
-    let image = values|||> Arc.generate config float32 (fun f -> f.ToString("0 KPa"))
+    use image = values|||> Arc.generate config float32 (fun f -> f.ToString("0 KPa"))
     image.Save(savePath, ImageFormat.Png)
     Process.Start savePath |> ignore
 
@@ -26,7 +26,7 @@ let g2() =
     let savePath = Path.Combine(basePath, "TestGauge2.png")
     let padding = Rectangle.FromLTRB(10, 10, 10, 30)
     let config = { Linear.defaultConfig with Padding = padding }
-    let image = values|||> Linear.generate config float32 (fun f -> f.ToString("0 KPa"))
+    use image = values|||> Linear.generate config float32 (fun f -> f.ToString("0 KPa"))
     image.Save(savePath, ImageFormat.Png)
     Process.Start savePath |> ignore
 
